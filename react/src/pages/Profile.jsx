@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMe, getUserById, getUserPosts, updateMe } from '../api/users';
+import { createOrGetConversation } from '../api/messages';
 import PostCard from '../components/PostCard';
 import FormField from '../components/FormField';
 import Avatar from '../components/Avatar';
@@ -9,13 +10,14 @@ import '../styles/pages.css';
 
 export default function Profile() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const isMePage = !id;
   const queryClient = useQueryClient();
 
   const meQuery = useQuery({
     queryKey: ['me'],
     queryFn: () => getMe(),
-    enabled: isMePage,
+    enabled: isMePage || !!id,
   });
 
   const userQuery = useQuery({
@@ -75,6 +77,22 @@ export default function Profile() {
     });
   };
 
+  const createChatMutation = useMutation({
+    mutationFn: (participantId) => createOrGetConversation({ participantId }),
+    onSuccess: (res) => {
+      if (res && res.success && res.data) {
+        const cid = res.data._id || res.data.id;
+        if (cid) navigate(`/messages/${cid}`);
+      }
+    },
+    onError: () => {
+      alert('Не удалось открыть чат');
+    }
+  });
+
+  const myId = meQuery.data?.data?.id || null;
+  const isForeignProfile = !!id && myId && String(myId) !== String(id);
+
   return (
     <div className="profile-page">
       {!profileData ? (
@@ -86,7 +104,20 @@ export default function Profile() {
             <h2 className="profile-username">{profileData.username}</h2>
             {profileData.bio ? <p className="profile-bio">{profileData.bio}</p> : <p className="profile-bio muted">Био пока не заполнено</p>}
             {canEdit ? (
-              <button className="btn" onClick={onStartEdit}>Редактировать</button>
+              <div className="profile-actions">
+                <button className="btn" onClick={onStartEdit}>Редактировать</button>
+              </div>
+            ) : null}
+            {!canEdit && isForeignProfile ? (
+              <div className="profile-actions">
+                <button
+                  className="btn primary"
+                  onClick={() => createChatMutation.mutate(id)}
+                  disabled={createChatMutation.isPending}
+                >
+                  {createChatMutation.isPending ? 'Открываем...' : 'Написать сообщение'}
+                </button>
+              </div>
             ) : null}
           </div>
         </div>

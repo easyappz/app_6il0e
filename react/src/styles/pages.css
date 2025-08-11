@@ -12,3 +12,36 @@
 .profile-info { display: flex; flex-direction: column; gap: 6px; }
 .profile-bio { color: var(--text); }
 .profile-bio.muted { color: var(--muted); }
+.profile-actions { display: flex; gap: 8px; margin-top: 6px; }
+
+/* Messages layout */
+.messages-page { display: grid; grid-template-columns: 360px 1fr; gap: 14px; }
+.dialogs-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; min-height: calc(100vh - 64px - 48px - 32px); }
+.dialogs-header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+.dialogs-search input { width: 100%; border: 1px solid var(--border); padding: 8px 10px; border-radius: 10px; }
+.dialogs-list { display: flex; flex-direction: column; gap: 8px; overflow: auto; padding-right: 4px; }
+.dialogs-footer { margin-top: auto; display: flex; justify-content: center; padding-top: 8px; }
+
+.chat-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; min-height: calc(100vh - 64px - 48px - 32px); display: flex; flex-direction: column; }
+.chat-root { display: flex; flex-direction: column; height: 100%; }
+.chat-header { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--border); }
+.chat-title { display: flex; flex-direction: column; line-height: 1.2; }
+.chat-title .name { font-weight: 700; }
+.chat-title .sub { font-size: 12px; }
+.chat-history { flex: 1; overflow: auto; display: flex; flex-direction: column; }
+.history-load { display: flex; justify-content: center; padding: 8px; }
+.messages-stream { display: flex; flex-direction: column; padding: 10px 8px; }
+.chat-composer { border-top: 1px solid var(--border); padding: 10px; }
+.chat-placeholder { width: 100%; height: 100%; display: grid; place-items: center; color: var(--muted); }
+
+.loading { padding: 10px; }
+.loading.small { padding: 4px; font-size: 14px; color: var(--muted); }
+.server-error { padding: 10px; color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; border-radius: 10px; }
+.muted { color: var(--muted); }
+
+/* Mobile */
+@media (max-width: 900px) {
+  .messages-page { grid-template-columns: 1fr; }
+  .dialogs-panel { min-height: auto; }
+  .chat-panel { min-height: auto; }
+}

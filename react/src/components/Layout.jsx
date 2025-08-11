@@ -1,4 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getUnreadCount } from '../api/messages';
 import Avatar from './Avatar';
 import '../styles/layout.css';
 
@@ -10,6 +12,16 @@ export default function Layout() {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const username = typeof window !== 'undefined' ? localStorage.getItem('username') || 'User' : 'User';
   const avatarUrl = typeof window !== 'undefined' ? localStorage.getItem('avatarUrl') || '' : '';
+
+  const unreadQuery = useQuery({
+    queryKey: ['unread-count'],
+    queryFn: () => getUnreadCount(),
+    enabled: !!token,
+    refetchInterval: 15000,
+    staleTime: 5000,
+  });
+
+  const unread = unreadQuery.data && unreadQuery.data.success && unreadQuery.data.data ? (unreadQuery.data.data.total || 0) : 0;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -44,6 +56,10 @@ export default function Layout() {
             <nav className="menu">
               <NavLink className={({ isActive }) => 'menu-link' + (isActive ? ' active' : '')} to="/feed">Лента</NavLink>
               <NavLink className={({ isActive }) => 'menu-link' + (isActive ? ' active' : '')} to="/profile">Профиль</NavLink>
+              <NavLink className={({ isActive }) => 'menu-link badge-wrap' + (isActive ? ' active' : '')} to="/messages">
+                <span>Сообщения</span>
+                {unread > 0 ? <span className="badge" aria-label="Непрочитанные сообщения">{unread}</span> : null}
+              </NavLink>
               <button className="menu-link danger" onClick={handleLogout}>Выход</button>
             </nav>
           </aside>
