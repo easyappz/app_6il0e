@@ -3,6 +3,7 @@ const { register, login } = require('@src/controllers/authController');
 const { getMe, getById, updateMe } = require('@src/controllers/userController');
 const { verifyAuth } = require('@src/middlewares/auth');
 const postsController = require('@src/controllers/postsController');
+const messagesController = require('@src/controllers/messagesController');
 
 const router = express.Router();
 
@@ -41,5 +42,14 @@ router.post('/posts/:id/like', verifyAuth, postsController.like);
 router.delete('/posts/:id/like', verifyAuth, postsController.unlike);
 router.post('/posts/:id/comment', verifyAuth, postsController.comment);
 router.get('/users/:id/posts', verifyAuth, postsController.userPosts);
+
+// Messages routes (protected)
+router.get('/messages/conversations', verifyAuth, messagesController.listConversations);
+router.post('/messages/conversations', verifyAuth, messagesController.createOrGetConversation);
+router.get('/messages/conversations/:id', verifyAuth, messagesController.getConversation);
+router.get('/messages/conversations/:id/messages', verifyAuth, messagesController.listMessages);
+router.post('/messages/conversations/:id/messages', verifyAuth, messagesController.sendMessage);
+router.post('/messages/conversations/:id/read', verifyAuth, messagesController.markRead);
+router.get('/messages/unread-count', verifyAuth, messagesController.unreadCount);
 
 module.exports = router;
