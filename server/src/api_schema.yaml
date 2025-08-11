@@ -1,0 +1,87 @@
+openapi: 3.0.0
+info:
+  title: Social App API (Base)
+  version: "1.0.0"
+servers:
+  - url: http://localhost:3001
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  uptime:
+                    type: number
+                    example: 123.45
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2024-01-01T12:00:00.000Z
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/hello:
+    get:
+      summary: Simple hello endpoint
+      responses:
+        '200':
+          description: Hello message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Hello from API!
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/status:
+    get:
+      summary: API status endpoint
+      responses:
+        '200':
+          description: Status payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2024-01-01T12:00:00.000Z
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

@@ -1,0 +1,1 @@
+This folder contains API controllers. Keep one controller per file (e.g., authController.js, profileController.js, postController.js).

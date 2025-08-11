@@ -1,34 +1,34 @@
 const express = require('express');
-const mongoose = require('mongoose');
 
 /**
- * Пример создания модели в базу данных
+ * Example of creating a model in MongoDB (commented example)
  */
+// const mongoose = require('mongoose');
 // const MongoTestSchema = new mongoose.Schema({
 //   value: { type: String, required: true },
 // });
-
 // const MongoModelTest = mongoose.model('Test', MongoTestSchema);
-
-// const newTest = new MongoModelTest({
-//   value: 'test-value',
-// });
-
+// const newTest = new MongoModelTest({ value: 'test-value' });
 // newTest.save();
 
 const router = express.Router();
 
 // GET /api/hello
-router.get('/hello', (req, res) => {
-  res.json({ message: 'Hello from API!' });
+router.get('/hello', async (req, res) => {
+  try {
+    res.json({ message: 'Hello from API!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // GET /api/status
-router.get('/status', (req, res) => {
-  res.json({ 
-    status: 'ok',
-    timestamp: new Date().toISOString()
-  });
+router.get('/status', async (req, res) => {
+  try {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

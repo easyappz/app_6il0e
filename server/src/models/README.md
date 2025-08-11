@@ -1,0 +1,1 @@
+This folder contains Mongoose models. Create one file per schema (e.g., User.js, Post.js).

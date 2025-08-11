@@ -1,0 +1,1 @@
+This folder contains Express middlewares (e.g., authMiddleware.js, errorMiddleware.js, uploadMiddleware.js).
