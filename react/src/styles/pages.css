@@ -1,0 +1,14 @@
+.auth-page { display: grid; place-items: center; min-height: calc(100vh - 64px - 48px); }
+.auth-card { width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+.auth-title { margin-bottom: 12px; }
+.auth-bottom { margin-top: 12px; color: var(--muted); }
+
+.feed-page { display: flex; flex-direction: column; gap: 12px; }
+.composer-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+.posts-list { display: flex; flex-direction: column; }
+
+.profile-page { display: flex; flex-direction: column; gap: 12px; }
+.profile-header { display: flex; gap: 14px; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+.profile-info { display: flex; flex-direction: column; gap: 6px; }
+.profile-bio { color: var(--text); }
+.profile-bio.muted { color: var(--muted); }
