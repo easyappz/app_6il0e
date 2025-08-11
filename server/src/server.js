@@ -18,9 +18,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Health check
 app.get('/api/health', (req, res) => {
   try {
-    res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+    res.json({ success: true, data: { status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -41,7 +41,7 @@ mongoose
 // Final error handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({ error: err.message || String(err) });
+  res.status(err.status || 500).json({ success: false, error: err.message || String(err) });
 });
 
 const PORT = process.env.PORT || 3001;
