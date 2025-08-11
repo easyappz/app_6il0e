@@ -55,6 +55,7 @@ export default function Layout() {
           <aside className="sidebar">
             <nav className="menu">
               <NavLink className={({ isActive }) => 'menu-link' + (isActive ? ' active' : '')} to="/feed">Лента</NavLink>
+              <NavLink className={({ isActive }) => 'menu-link' + (isActive ? ' active' : '')} to="/users">Пользователи</NavLink>
               <NavLink className={({ isActive }) => 'menu-link' + (isActive ? ' active' : '')} to="/profile">Профиль</NavLink>
               <NavLink className={({ isActive }) => 'menu-link badge-wrap' + (isActive ? ' active' : '')} to="/messages">
                 <span>Сообщения</span>

@@ -19,3 +19,9 @@ export async function getUserPosts(id) {
   const res = await instance.get(`/api/users/${id}/posts`);
   return res.data; // { success, data: Post[] }
 }
+
+// Search users with pagination
+export async function searchUsers({ query, page = 1, limit = 20 } = {}) {
+  const res = await instance.get('/api/users', { params: { query, page, limit } });
+  return res.data; // { success, data: { items, page, limit, total } }
+}

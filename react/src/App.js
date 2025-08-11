@@ -9,6 +9,7 @@ import Feed from './pages/Feed';
 import Profile from './pages/Profile';
 import Messages from './pages/Messages';
 import Chat from './pages/Chat';
+import Users from './pages/Users';
 import './styles/global.css';
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ function App() {
 
               <Route element={<ProtectedRoute />}>
                 <Route path="/feed" element={<Feed />} />
+                <Route path="/users" element={<Users />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:id" element={<Profile />} />
 
