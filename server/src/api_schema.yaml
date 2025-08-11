@@ -1,7 +1,10 @@
 openapi: 3.0.0
 info:
   title: Social App API
-  version: "1.2.0"
+  version: "1.3.0"
+  description: |
+    Unified API schema for the Social App.
+    General response shape: { success: boolean, data?: any, error?: string }
 servers:
   - url: http://localhost:3001
 components:
@@ -10,19 +13,31 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  parameters:
+    AuthorizationHeader:
+      in: header
+      name: Authorization
+      required: true
+      schema:
+        type: string
+        example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      description: Bearer JWT token. Format: "Bearer <token>"
   schemas:
     ApiResponse:
       type: object
       properties:
         success:
           type: boolean
+          example: true
         data:
           nullable: true
         error:
           type: string
           nullable: true
+          example: Error message
     User:
       type: object
+      description: Sanitized user returned by auth and user endpoints
       properties:
         id:
           type: string
@@ -42,39 +57,56 @@ components:
         createdAt:
           type: string
           format: date-time
+          example: 2024-06-04T10:15:30.000Z
         updatedAt:
           type: string
           format: date-time
+          example: 2024-06-04T10:15:30.000Z
+    PostUser:
+      type: object
+      description: User object embedded in Post documents (limited fields)
+      properties:
+        _id:
+          type: string
+          example: "665f1c2b9a3a8f0012abcd34"
+        username:
+          type: string
+          example: johndoe
+        avatarUrl:
+          type: string
+          example: https://example.com/avatar.png
     PostComment:
       type: object
       properties:
         _id:
           type: string
+          example: "665f1c2b9a3a8f0012abce01"
         author:
-          allOf:
-            - $ref: '#/components/schemas/User'
+          $ref: '#/components/schemas/PostUser'
         text:
           type: string
           example: Nice post!
         createdAt:
           type: string
           format: date-time
+          example: 2024-06-04T10:15:30.000Z
     Post:
       type: object
       properties:
-        id:
+        _id:
           type: string
+          example: "665f1c2b9a3a8f0012abcf77"
         author:
-          allOf:
-            - $ref: '#/components/schemas/User'
+          $ref: '#/components/schemas/PostUser'
         content:
           type: string
           example: Hello world!
         likes:
           type: array
+          description: Array of user ids who liked the post
           items:
             type: string
-          description: Array of user ids who liked
+            example: "665f1c2b9a3a8f0012abcd34"
         comments:
           type: array
           items:
@@ -82,97 +114,104 @@ components:
         createdAt:
           type: string
           format: date-time
+          example: 2024-06-04T10:15:30.000Z
         updatedAt:
           type: string
           format: date-time
+          example: 2024-06-04T10:15:30.000Z
 paths:
   /api/health:
     get:
       summary: Health check
+      description: Returns API health status and uptime
+      x-auth: false
       responses:
         '200':
           description: Service is healthy
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          status:
-                            type: string
-                            example: ok
-                          uptime:
-                            type: number
-                            example: 123.45
-                          timestamp:
-                            type: string
-                            format: date-time
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      status: ok
+                      uptime: 123.45
+                      timestamp: 2024-06-04T10:15:30.000Z
         '500':
           description: Internal error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/hello:
     get:
       summary: Simple hello endpoint
+      x-auth: false
       responses:
         '200':
           description: Hello message
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          message:
-                            type: string
-                            example: Hello from API!
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      message: Hello from API!
         '500':
           description: Internal error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/status:
     get:
       summary: API status endpoint
+      x-auth: false
       responses:
         '200':
           description: Status payload
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          status:
-                            type: string
-                            example: ok
-                          timestamp:
-                            type: string
-                            format: date-time
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      status: ok
+                      timestamp: 2024-06-04T10:15:30.000Z
         '500':
           description: Internal error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/auth/register:
     post:
       summary: Register a new user
+      x-auth: false
       requestBody:
         required: true
         content:
@@ -183,51 +222,78 @@ paths:
               properties:
                 username:
                   type: string
-                  example: johndoe
                 email:
                   type: string
-                  example: john@example.com
                 password:
                   type: string
-                  example: secret123
+            examples:
+              example-1:
+                value:
+                  username: johndoe
+                  email: john@example.com
+                  password: secret123
       responses:
         '201':
           description: Registered successfully
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          token:
-                            type: string
-                          user:
-                            $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      user:
+                        id: 665f1c2b9a3a8f0012abcd34
+                        username: johndoe
+                        email: john@example.com
+                        bio: ""
+                        avatarUrl: ""
+                        createdAt: 2024-06-04T10:15:30.000Z
+                        updatedAt: 2024-06-04T10:15:30.000Z
         '400':
           description: Validation error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: username, email and password are required
+                weak:
+                  value:
+                    success: false
+                    error: Password must be at least 6 characters
         '409':
           description: Duplicate email or username
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                conflict:
+                  value:
+                    success: false
+                    error: User with this email already exists
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/auth/login:
     post:
       summary: Login with email or username
+      x-auth: false
       requestBody:
         required: true
         content:
@@ -238,84 +304,138 @@ paths:
               properties:
                 emailOrUsername:
                   type: string
-                  example: johndoe
                 password:
                   type: string
-                  example: secret123
+            examples:
+              example-1:
+                value:
+                  emailOrUsername: johndoe
+                  password: secret123
       responses:
         '200':
           description: Logged in successfully
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          token:
-                            type: string
-                          user:
-                            $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      user:
+                        id: 665f1c2b9a3a8f0012abcd34
+                        username: johndoe
+                        email: john@example.com
+                        bio: ""
+                        avatarUrl: ""
+                        createdAt: 2024-06-04T10:15:30.000Z
+                        updatedAt: 2024-06-04T10:15:30.000Z
         '400':
           description: Validation error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: emailOrUsername and password are required
         '401':
           description: Invalid credentials
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalid:
+                  value:
+                    success: false
+                    error: Invalid credentials
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/users/me:
     get:
       summary: Get current user profile
+      x-auth: true
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
       responses:
         '200':
           description: Current user profile
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      id: 665f1c2b9a3a8f0012abcd34
+                      username: johndoe
+                      email: john@example.com
+                      bio: ""
+                      avatarUrl: ""
+                      createdAt: 2024-06-04T10:15:30.000Z
+                      updatedAt: 2024-06-04T10:15:30.000Z
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
+                format:
+                  value:
+                    success: false
+                    error: Invalid Authorization header format. Expected: Bearer <token>
         '404':
           description: Not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error: User not found
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
     patch:
       summary: Update current user profile
+      x-auth: true
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
       requestBody:
         required: true
         content:
@@ -329,51 +449,90 @@ paths:
                   type: string
                 username:
                   type: string
+            examples:
+              example-1:
+                value:
+                  bio: New bio
+                  avatarUrl: https://example.com/avatar.png
+                  username: johnny
       responses:
         '200':
           description: Updated user profile
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      id: 665f1c2b9a3a8f0012abcd34
+                      username: johnny
+                      email: john@example.com
+                      bio: New bio
+                      avatarUrl: https://example.com/avatar.png
+                      createdAt: 2024-06-04T10:15:30.000Z
+                      updatedAt: 2024-06-05T09:00:00.000Z
         '400':
           description: Validation error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                empty:
+                  value:
+                    success: false
+                    error: username cannot be empty
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
         '409':
           description: Username already taken
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                conflict:
+                  value:
+                    success: false
+                    error: Username is already taken
         '404':
           description: User not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error: User not found
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/users/{id}:
     get:
       summary: Get user by id
+      x-auth: false
       parameters:
         - in: path
           name: id
@@ -386,29 +545,49 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      id: 665f1c2b9a3a8f0012abcd34
+                      username: johndoe
+                      email: john@example.com
+                      bio: ""
+                      avatarUrl: ""
+                      createdAt: 2024-06-04T10:15:30.000Z
+                      updatedAt: 2024-06-04T10:15:30.000Z
         '404':
           description: Not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error: User not found
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/posts:
     post:
       summary: Create a post
+      x-auth: true
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
       requestBody:
         required: true
         content:
@@ -419,43 +598,73 @@ paths:
               properties:
                 content:
                   type: string
-                  example: Hello world!
+            examples:
+              example-1:
+                value:
+                  content: Hello world!
       responses:
         '201':
           description: Post created
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/Post'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      _id: 665f1c2b9a3a8f0012abcf77
+                      author:
+                        _id: 665f1c2b9a3a8f0012abcd34
+                        username: johndoe
+                        avatarUrl: ""
+                      content: Hello world!
+                      likes: []
+                      comments: []
+                      createdAt: 2024-06-04T10:15:30.000Z
+                      updatedAt: 2024-06-04T10:15:30.000Z
         '400':
           description: Validation error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Content is required
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/posts/feed:
     get:
       summary: Get global posts feed
+      x-auth: true
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
         - in: query
           name: page
           schema:
@@ -477,32 +686,60 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/Post'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      - _id: 665f1c2b9a3a8f0012abcf77
+                        author:
+                          _id: 665f1c2b9a3a8f0012abcd34
+                          username: johndoe
+                          avatarUrl: ""
+                        content: Hello world!
+                        likes:
+                          - 665f1c2b9a3a8f0012abce55
+                        comments:
+                          - _id: 665f1c2b9a3a8f0012abce01
+                            author:
+                              _id: 665f1c2b9a3a8f0012abce55
+                              username: jane
+                              avatarUrl: ""
+                            text: Nice post!
+                            createdAt: 2024-06-04T10:16:00.000Z
+                        createdAt: 2024-06-04T10:15:30.000Z
+                        updatedAt: 2024-06-04T10:15:30.000Z
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/posts/{id}:
     get:
       summary: Get post by id
+      x-auth: true
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
         - in: path
           name: id
           required: true
@@ -514,42 +751,82 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/Post'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      _id: 665f1c2b9a3a8f0012abcf77
+                      author:
+                        _id: 665f1c2b9a3a8f0012abcd34
+                        username: johndoe
+                        avatarUrl: ""
+                      content: Hello world!
+                      likes:
+                        - 665f1c2b9a3a8f0012abce55
+                      comments:
+                        - _id: 665f1c2b9a3a8f0012abce01
+                          author:
+                            _id: 665f1c2b9a3a8f0012abce55
+                            username: jane
+                            avatarUrl: ""
+                          text: Nice post!
+                          createdAt: 2024-06-04T10:16:00.000Z
+                      createdAt: 2024-06-04T10:15:30.000Z
+                      updatedAt: 2024-06-04T10:15:30.000Z
         '400':
           description: Invalid id
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalid:
+                  value:
+                    success: false
+                    error: Invalid post id
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
         '404':
           description: Not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error: Post not found
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/posts/{id}/like:
     post:
       summary: Like a post
+      x-auth: true
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
         - in: path
           name: id
           required: true
@@ -561,46 +838,65 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          postId:
-                            type: string
-                          likesCount:
-                            type: integer
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      postId: 665f1c2b9a3a8f0012abcf77
+                      likesCount: 5
         '400':
           description: Invalid id
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalid:
+                  value:
+                    success: false
+                    error: Invalid post id
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
         '404':
           description: Post not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error: Post not found
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
     delete:
       summary: Unlike a post
+      x-auth: true
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
         - in: path
           name: id
           required: true
@@ -612,47 +908,66 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          postId:
-                            type: string
-                          likesCount:
-                            type: integer
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      postId: 665f1c2b9a3a8f0012abcf77
+                      likesCount: 4
         '400':
           description: Invalid id
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalid:
+                  value:
+                    success: false
+                    error: Invalid post id
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
         '404':
           description: Post not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error: Post not found
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/posts/{id}/comment:
     post:
       summary: Add a comment to the post
+      x-auth: true
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
         - in: path
           name: id
           required: true
@@ -668,54 +983,87 @@ paths:
               properties:
                 text:
                   type: string
-                  example: Nice post!
+            examples:
+              example-1:
+                value:
+                  text: Nice post!
       responses:
         '201':
           description: Comment added
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          postId:
-                            type: string
-                          comment:
-                            $ref: '#/components/schemas/PostComment'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      postId: 665f1c2b9a3a8f0012abcf77
+                      comment:
+                        _id: 665f1c2b9a3a8f0012abce01
+                        author:
+                          _id: 665f1c2b9a3a8f0012abcd34
+                          username: johndoe
+                          avatarUrl: ""
+                        text: Nice post!
+                        createdAt: 2024-06-04T10:16:00.000Z
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalidId:
+                  value:
+                    success: false
+                    error: Invalid post id
+                missingText:
+                  value:
+                    success: false
+                    error: Text is required
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
         '404':
           description: Post not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error: Post not found
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
   /api/users/{id}/posts:
     get:
       summary: Get posts by user id
+      x-auth: true
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/AuthorizationHeader'
         - in: path
           name: id
           required: true
@@ -727,35 +1075,63 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/Post'
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      - _id: 665f1c2b9a3a8f0012abcf77
+                        author:
+                          _id: 665f1c2b9a3a8f0012abcd34
+                          username: johndoe
+                          avatarUrl: ""
+                        content: My first post
+                        likes: []
+                        comments: []
+                        createdAt: 2024-06-04T10:15:30.000Z
+                        updatedAt: 2024-06-04T10:15:30.000Z
         '400':
           description: Invalid id
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalid:
+                  value:
+                    success: false
+                    error: Invalid user id
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    error: Authorization header is missing
         '404':
           description: User not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error: User not found
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+              examples:
+                error:
+                  value:
+                    success: false
+                    error: Unexpected error
